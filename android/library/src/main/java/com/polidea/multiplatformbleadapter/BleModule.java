@@ -1226,10 +1226,13 @@ public class BleModule implements BleAdapter {
                 .setCallbackType(callbackType)
                 .build();
 
-        int length = uuids == null ? 0 : uuids.length;
+        int length = uuids == null || uuids.length == 0 ? 0 : uuids.length + 1;
         ScanFilter[] filters = new ScanFilter[length];
-        for (int i = 0; i < length; i++) {
+        for (int i = 0; i < length - 1; i++) {
             filters[i] = new ScanFilter.Builder().setServiceUuid(ParcelUuid.fromString(uuids[i].toString())).build();
+        }
+        if (length > 0) {
+            filters[length - 1] = new ScanFilter.Builder().setManufacturerData(0x004c, new byte[] {}).build();
         }
 
         scanSubscription = rxBleClient

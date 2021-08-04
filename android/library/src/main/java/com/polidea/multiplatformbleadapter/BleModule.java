@@ -360,7 +360,8 @@ public class BleModule implements BleAdapter {
                                 OnSuccessCallback<Device[]> onSuccessCallback,
                                 OnErrorCallback onErrorCallback) {
         if (rxBleClient == null) {
-            throw new IllegalStateException("BleManager not created when tried to get known devices");
+            onErrorCallback.onError(new BleError(BleErrorCode.BluetoothManagerDestroyed, "BleManager not created when tried to get known devices", null));
+            return;
         }
 
         List<Device> knownDevices = new ArrayList<>();
@@ -384,7 +385,8 @@ public class BleModule implements BleAdapter {
                                     OnSuccessCallback<Device[]> onSuccessCallback,
                                     OnErrorCallback onErrorCallback) {
         if (rxBleClient == null) {
-            throw new IllegalStateException("BleManager not created when tried to get connected devices");
+            onErrorCallback.onError(new BleError(BleErrorCode.BluetoothManagerDestroyed, "BleManager not created when tried to get connected devices", null));
+            return;
         }
 
         if (serviceUUIDs.length == 0) {
@@ -425,7 +427,8 @@ public class BleModule implements BleAdapter {
                                 OnEventCallback<ConnectionState> onConnectionStateChangedCallback,
                                 OnErrorCallback onErrorCallback) {
         if (rxBleClient == null) {
-            throw new IllegalStateException("BleManager not created when tried to connect to device");
+            onErrorCallback.onError(new BleError(BleErrorCode.BluetoothManagerDestroyed, "BleManager not created when tried to connect to device", null));
+            return;
         }
 
         final RxBleDevice device = rxBleClient.getBleDevice(deviceIdentifier);
@@ -449,13 +452,14 @@ public class BleModule implements BleAdapter {
                                        OnSuccessCallback<Device> onSuccessCallback,
                                        OnErrorCallback onErrorCallback) {
         if (rxBleClient == null) {
-            throw new IllegalStateException("BleManager not created when tried to cancel device connection");
+            onErrorCallback.onError(new BleError(BleErrorCode.BluetoothManagerDestroyed, "BleManager not created when tried to cancel device connection", null));
+            return;
         }
 
         final RxBleDevice device = rxBleClient.getBleDevice(deviceIdentifier);
 
         if (connectingDevices.removeSubscription(deviceIdentifier) && device != null) {
-            onSuccessCallback.onSuccess(rxBleDeviceToDeviceMapper.map(device));
+            onSuccessCallback.onSuccess(rxBleDeviceToDeviceMapper.map(device, null));
         } else {
             if (device == null) {
                 onErrorCallback.onError(BleErrorUtils.deviceNotFound(deviceIdentifier));
@@ -470,7 +474,8 @@ public class BleModule implements BleAdapter {
                                   OnSuccessCallback<Boolean> onSuccessCallback,
                                   OnErrorCallback onErrorCallback) {
         if (rxBleClient == null) {
-            throw new IllegalStateException("BleManager not created when tried to check if device is connected");
+            onErrorCallback.onError(new BleError(BleErrorCode.BluetoothManagerDestroyed, "BleManager not created when tried to check if device is connected", null));
+            return;
         }
 
         final RxBleDevice device = rxBleClient.getBleDevice(deviceIdentifier);
@@ -1218,7 +1223,8 @@ public class BleModule implements BleAdapter {
                                      final OnEventCallback<ScanResult> onEventCallback,
                                      final OnErrorCallback onErrorCallback) {
         if (rxBleClient == null) {
-            throw new IllegalStateException("BleManager not created when tried to start device scan");
+            onErrorCallback.onError(new BleError(BleErrorCode.BluetoothManagerDestroyed, "BleManager not created when tried to start device scan", null));
+            return;
         }
 
         ScanSettings scanSettings = new ScanSettings.Builder()
@@ -1243,7 +1249,7 @@ public class BleModule implements BleAdapter {
                     public void call(com.polidea.rxandroidble.scan.ScanResult scanResult) {
                         String deviceId = scanResult.getBleDevice().getMacAddress();
                         if (!discoveredDevices.containsKey(deviceId)) {
-                            discoveredDevices.put(deviceId, rxBleDeviceToDeviceMapper.map(scanResult.getBleDevice()));
+                            discoveredDevices.put(deviceId, rxBleDeviceToDeviceMapper.map(scanResult.getBleDevice(), null));
                         }
                         onEventCallback.onEvent(rxScanResultToScanResultMapper.map(scanResult));
                     }
@@ -1379,7 +1385,7 @@ public class BleModule implements BleAdapter {
 
                     @Override
                     public void onNext(RxBleConnection connection) {
-                        Device localDevice = rxBleDeviceToDeviceMapper.map(device);
+                        Device localDevice = rxBleDeviceToDeviceMapper.map(device, connection);
                         onConnectionStateChangedCallback.onEvent(ConnectionState.CONNECTED);
                         cleanServicesAndCharacteristicsForDevice(localDevice);
                         connectedDevices.put(device.getMacAddress(), localDevice);
